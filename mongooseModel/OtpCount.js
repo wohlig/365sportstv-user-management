@@ -1,10 +1,10 @@
 var schema = new Schema(
     {
-        otp : [
+        otp: [
             {
-                userId : { type: Schema.Types.ObjectId, ref: "User" },
+                userId: { type: Schema.Types.ObjectId, ref: "User" },
                 otp: { type: String, required: true },
-                otpDate: { type: Date},
+                otpDate: { type: Date },
                 otpCount: { type: Number, default: 0 }
             }
         ]

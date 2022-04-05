@@ -53,7 +53,7 @@ export default {
         const randomCode = randomize("0", 4)
         // let outp = await axios.get(`https://wtsapp.aronertech.com/api/sendText?token=${wtsapInstance}&phone=91${data.mobile}&message=${randomCode} is your One time Password for Verification of Taj-Exchange Account. Don't share it`)
         // if (outp.data.status === 'success') {
-        
+
         if (randomCode) {
             data.updateObj = {
                 mobileVerification: randomCode
