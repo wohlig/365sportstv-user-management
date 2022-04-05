@@ -70,14 +70,16 @@ router.post(
         body: {
             type: "object",
             properties: {
+                oldPassword: { type: "string" },
                 password: { type: "string" }
             },
-            required: ["password"]
+            required: ["oldPassword", "password"]
         }
     }),
+    authenticateUser,
     async (req, res) => {
         try {
-            let outputData = await UserModel.changePassword(req.body)
+            let outputData = await UserModel.changePassword(req.body, req.user)
             if (outputData && outputData.value) {
                 res.status(200).json(outputData.data)
             } else {
@@ -108,9 +110,10 @@ router.post(
             required: ["password"]
         }
     }),
+    authenticateUser,
     async (req, res) => {
         try {
-            let outputData = await UserModel.resetPassword(req.body)
+            let outputData = await UserModel.resetPassword(req.body, req.user)
             if (outputData && outputData.value) {
                 res.status(200).json(outputData.data)
             } else {
@@ -149,10 +152,10 @@ router.post(
         body: {
             type: "object",
             properties: {
-                mobile: { type: "string" },
+                _id: { type: "string" },
                 verificationCode: { type: "string" }
             },
-            required: ["mobile", "verificationCode"]
+            required: ["_id", "verificationCode"]
         }
     }),
     async (req, res) => {

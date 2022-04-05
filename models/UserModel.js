@@ -66,7 +66,6 @@ export default {
         const checkIfUserAvailable = await User.findOne({
             _id: data._id
         })
-        console.log(checkIfUserAvailable)
         if (_.isEmpty(checkIfUserAvailable)) {
             return { data: "No Such User Exists", value: false }
         }
@@ -162,24 +161,25 @@ export default {
         let objToUpdate = {
             mobileVerification: null
         }
-        await User.updateOne({ _id: data._id }, objToUpdate)
+        const x = await User.updateOne({ _id: data._id }, objToUpdate)
         const obj = {
             _id: userAvailable._id
         }
         const accessTokenData = await UserModel.generateAccessToken(obj)
-        if (accessTokenOutput && !accessTokenOutput.value) {
+        if (accessTokenData && !accessTokenData.value) {
             return { data: accessTokenOutput.data, value: false }
         }
         return { data: accessTokenData.data, value: true }
     },
-    async resetPassword(data) {
-        const sub = jwt.verify(data.accessToken, jwtKey)
-        if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
-            return { data: "Incorrect AccessToken", value: false }
-        }
+    async resetPassword(data, user) {
+        // const sub = jwt.verify(data.accessToken, jwtKey)
+        // if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
+        //     return { data: "Incorrect AccessToken", value: false }
+        // }
         const userAvailable = await User.findOne({
-            _id: sub._id,
-            mobile: sub.mobile
+            _id: user._id,
+            mobile: user.mobile,
+            mobileVerified: true
         })
         if (_.isEmpty(userAvailable) || !userAvailable._id) {
             return { data: "No Such User Exists", value: false }
@@ -198,14 +198,15 @@ export default {
         }
         return { data: "Failed to Change Password", value: false }
     },
-    async changePassword(data) {
-        const sub = jwt.verify(data.accessToken, jwtKey)
-        if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
-            return { data: "Incorrect AccessToken", value: false }
-        }
+    async changePassword(data, user) {
+        // const sub = jwt.verify(data.accessToken, jwtKey)
+        // if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
+        //     return { data: "Incorrect AccessToken", value: false }
+        // }
         const userAvailable = await User.findOne({
-            _id: sub._id,
-            mobile: sub.mobile
+            _id: user._id,
+            mobile: user.mobile,
+            mobileVerified: true
         })
         if (_.isEmpty(userAvailable) || !userAvailable._id) {
             return { data: "No Such User Exists", value: false }
@@ -219,9 +220,11 @@ export default {
             )
             if (updateUser && updateUser.modifiedCount) {
                 return { data: "Password Changed Successfully", value: true }
+            } else {
+                return { data: "Failed to Change Password", value: false }
             }
         }
-        return { data: "Failed to Change Password", value: false }
+        return { data: "Incorrect Old Password", value: false }
     },
 
     async updateUser(data) {
