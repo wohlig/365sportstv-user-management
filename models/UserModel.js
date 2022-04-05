@@ -17,7 +17,7 @@ export default {
             name: data.name,
             mobile: data.mobile,
             password: sha256(data.password),
-            userType: data.userType,
+            userType: data.userType
         }
 
         if (_.isEmpty(ifAlreadyUser) || !ifAlreadyUser._id) {
@@ -58,8 +58,7 @@ export default {
                 mobileVerification: randomCode
             }
             return await UserModel.updateUser(data)
-        }
-        else {
+        } else {
             return { data: "Failed to Send SMS", value: false }
         }
     },
@@ -82,16 +81,13 @@ export default {
         // }
         const accessTokenOutput = await UserModel.generateAccessToken(data)
         if (accessTokenOutput && !accessTokenOutput.value) {
-            return { data: accessTokenOutput.data , value: false }
+            return { data: accessTokenOutput.data, value: false }
         }
         let objToUpdate = {
             mobileVerified: true,
             mobileVerification: null
         }
-        const userOutput = await User.updateOne(
-            { _id: data._id },
-            objToUpdate
-        )
+        const userOutput = await User.updateOne({ _id: data._id }, objToUpdate)
         if (
             userOutput &&
             !userOutput.modifiedCount &&
@@ -129,12 +125,15 @@ export default {
             return { data: "Incorrect Password", value: false }
         }
         const obj = {
-            _id: checkUser._id,
+            _id: checkUser._id
         }
         return UserModel.generateAccessToken(obj)
     },
     async forgotPassword(data) {
-        const userIfAvailable = await User.findOne({ mobile: data.mobile, mobileVerified: true })
+        const userIfAvailable = await User.findOne({
+            mobile: data.mobile,
+            mobileVerified: true
+        })
         if (_.isEmpty(userIfAvailable)) {
             return { data: "No Such User Exists", value: false }
         }
@@ -150,30 +149,26 @@ export default {
 
     async forgotPasswordVerification(data) {
         const userAvailable = await User.findOne({
-            _id: data._id,
+            _id: data._id
         })
         if (_.isEmpty(userAvailable)) {
             return { data: "No Such User Exists", value: false }
         }
         if (
-            userAvailable.mobileVerification !==
-            Number(data.verificationCode)
+            userAvailable.mobileVerification !== Number(data.verificationCode)
         ) {
             return { data: "Incorrect OTP", value: false }
         }
         let objToUpdate = {
             mobileVerification: null
         }
-        await User.updateOne(
-            { _id: data._id },
-            objToUpdate
-        )
+        await User.updateOne({ _id: data._id }, objToUpdate)
         const obj = {
-            _id: userAvailable._id,
+            _id: userAvailable._id
         }
         const accessTokenData = await UserModel.generateAccessToken(obj)
         if (accessTokenOutput && !accessTokenOutput.value) {
-            return { data: accessTokenOutput.data , value: false }
+            return { data: accessTokenOutput.data, value: false }
         }
         return { data: accessTokenData.data, value: true }
     },
@@ -228,7 +223,7 @@ export default {
         }
         return { data: "Failed to Change Password", value: false }
     },
-    
+
     async updateUser(data) {
         const updateOutput = await User.updateOne(
             { mobile: data.mobile },
@@ -253,5 +248,5 @@ export default {
         return await User.findOne({
             _id: id
         }).exec()
-    },
+    }
 }

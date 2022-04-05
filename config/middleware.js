@@ -7,7 +7,7 @@
  * Use Middleware in Express Apps
  * app.use(bodyParser.json())
  */
- global.authenticateUser = async (req, res, next) => {
+global.authenticateUser = async (req, res, next) => {
     if (req && req.headers && req.headers.authorization) {
         var decoded
         try {
