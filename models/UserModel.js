@@ -1,5 +1,6 @@
 import { sha256 } from "js-sha256"
 import User from "../mongooseModel/User"
+import OtpCount from "../mongooseModel/OtpCount"
 
 export default {
     async signup(data) {
@@ -12,7 +13,6 @@ export default {
         ) {
             return { data: "User Already Exist", value: false }
         }
-
         let newUserObj = {
             name: data.name,
             mobile: data.mobile,
@@ -50,10 +50,41 @@ export default {
         return { data: saveUser._id, value: true }
     },
     async sendOtpToMobileNumber(data) {
-        const randomCode = randomize("0", 4)
+        const randomCode = randomize("0", 6)
+        const otp = await OtpCount.findOne({
+            mobile: data.mobile,
+            otpDate: new Date().toLocaleDateString()
+        })
+        if (!otp || !otp._id) {
+            const otpCount = new OtpCount({
+                mobile: data.mobile,
+                otpDate: new Date().toLocaleDateString(),
+                otpCount: 1
+            })
+            const saveOtpCount = await otpCount.save()
+            if (saveOtpCount && !saveOtpCount._id) {
+                return { data: "Failed to Save Otp", value: false }
+            }
+        } else {
+            if (otp && otp.otpCount >= 3) {
+                return {
+                    data: "You have exceeded the maximum limit of OTP",
+                    value: false
+                }
+            } else {
+                const updateOtpCount = await OtpCount.updateOne(
+                    { _id: otp._id },
+                    {
+                        $inc: { otpCount: 1 }
+                    }
+                )
+                if (updateOtpCount && !updateOtpCount.modifiedCount) {
+                    return { data: "Failed to Update Otp", value: false }
+                }
+            }
+        }
         // let outp = await axios.get(`https://wtsapp.aronertech.com/api/sendText?token=${wtsapInstance}&phone=91${data.mobile}&message=${randomCode} is your One time Password for Verification of Taj-Exchange Account. Don't share it`)
         // if (outp.data.status === 'success') {
-
         if (randomCode) {
             data.updateObj = {
                 mobileVerification: randomCode

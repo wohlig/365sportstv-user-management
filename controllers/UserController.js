@@ -145,6 +145,18 @@ router.post("/verifyMobile", async (req, res) => {
         res.status(500).send(error)
     }
 })
+router.post("/resendOtp", async (req, res) => {
+    try {
+        let outputData = await UserModel.sendOtpToMobileNumber(req.body)
+        if (outputData && outputData.value) {
+            res.status(200).json(outputData.data)
+        } else {
+            res.status(500).json(outputData.data)
+        }
+    } catch (error) {
+        res.status(500).send(error)
+    }
+})
 
 router.post(
     "/forgotPasswordVerification",
@@ -196,15 +208,6 @@ router.post(
     }
 )
 
-router.post("/sendOtpToMobileNumber", async (req, res) => {
-    try {
-        const data = await UserModel.sendOtpToMobileNumber(req.body)
-        res.json(data)
-    } catch (error) {
-        console.error(error)
-        res.status(500).json(error)
-    }
-})
 router.post("/getUserByAuthToken", authenticateUser, async (req, res) => {
     try {
         const data = await UserModel.getUserByAuthToken(req.user._id)
