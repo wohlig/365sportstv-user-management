@@ -1,6 +1,6 @@
 var schema = new Schema(
     {
-        mobile: { type: Number },
+        mobile: { type: String },
         otpDate: { type: String },
         otpCount: { type: Number, default: 0 }
     },
