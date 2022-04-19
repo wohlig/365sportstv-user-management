@@ -2,6 +2,7 @@ const router = Router()
 // Signup
 router.post("/signup", async (req, res) => {
     try {
+        console.log("In Signup")
         var data = await UserModel.signup(req.body)
         if (data.value) {
             res.status(200).json(data.data)
