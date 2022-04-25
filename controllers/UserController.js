@@ -239,4 +239,25 @@ router.get(
     }
 )
 
+//search
+
+router.post("/search", async (req, res) => {
+    try {
+        const data = await UserModel.search(req.body)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
+router.post("/getTotalUsers", async (req, res) => {
+    try {
+        const data = await UserModel.getTotalUsers(req.body)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
+
 export default router
