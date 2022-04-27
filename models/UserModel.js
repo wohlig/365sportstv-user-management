@@ -160,6 +160,53 @@ export default {
         }
         return UserModel.generateAccessToken(obj)
     },
+    async getUserById(id) {
+        return await User.findOne({
+            _id: id
+        }).exec()
+    },
+    search: async (body) => {
+        let _ = require("lodash")
+        if (_.isEmpty(body.sortBy)) {
+            body.sortBy = ["updatedAt"]
+        }
+        if (_.isEmpty(body.sortDesc)) {
+            body.sortDesc = [-1]
+        } else {
+            if (body.sortDesc[0] === false) {
+                body.sortDesc[0] = -1
+            }
+            if (body.sortDesc[0] === true) {
+                body.sortDesc[0] = 1
+            }
+        }
+        var sort = {}
+        sort[body.sortBy[0]] = body.sortDesc[0]
+        var startDate = new Date(body.startDate)
+        var endDate = new Date(body.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        const pageNo = body.page
+        const skip = (pageNo - 1) * body.itemsPerPage
+        const limit = body.itemsPerPage
+        const data = await User.find({
+            updatedAt: { $gte: startDate, $lt: endDate },
+            status: { $in: ["enabled"] },
+            userType: { $in: ["User"] },
+            mobileVerified: true
+        })
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+            .exec()
+        const count = await User.countDocuments({
+            updatedAt: { $gte: startDate, $lt: endDate },
+            status: { $in: ["enabled"] },
+            userType: { $in: ["User"] },
+            mobileVerified: true
+        }).exec()
+        const maxPage = Math.ceil(count / limit)
+        return { data, count, maxPage }
+    },
     async forgotPassword(data) {
         const userIfAvailable = await User.findOne({
             mobile: data.mobile,
@@ -279,53 +326,7 @@ export default {
             _id: id
         }).exec()
     },
-    async getUserById(id) {
-        return await User.findOne({
-            _id: id
-        }).exec()
-    },
-    search: async (body) => {
-        let _ = require("lodash")
-        if (_.isEmpty(body.sortBy)) {
-            body.sortBy = ["updatedAt"]
-        }
-        if (_.isEmpty(body.sortDesc)) {
-            body.sortDesc = [-1]
-        } else {
-            if (body.sortDesc[0] === false) {
-                body.sortDesc[0] = -1
-            }
-            if (body.sortDesc[0] === true) {
-                body.sortDesc[0] = 1
-            }
-        }
-        var sort = {}
-        sort[body.sortBy[0]] = body.sortDesc[0]
-        var startDate = new Date(body.startDate)
-        var endDate = new Date(body.endDate)
-        endDate.setDate(endDate.getDate() + 1)
-        const pageNo = body.page
-        const skip = (pageNo - 1) * body.itemsPerPage
-        const limit = body.itemsPerPage
-        const data = await User.find({
-            updatedAt: { $gte: startDate, $lt: endDate },
-            status: { $in: ["enabled"] },
-            userType: { $in: ["User"] },
-            mobileVerified: true
-        })
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .exec()
-        const count = await User.countDocuments({
-            updatedAt: { $gte: startDate, $lt: endDate },
-            status: { $in: ["enabled"] },
-            userType: { $in: ["User"] },
-            mobileVerified: true
-        }).exec()
-        const maxPage = Math.ceil(count / limit)
-        return { data, count, maxPage }
-    },
+
     getTotalUsers: async (body) => {
         var startDate = new Date(body.startDate)
         var endDate = new Date(body.endDate)

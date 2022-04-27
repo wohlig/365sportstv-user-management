@@ -227,7 +227,6 @@ router.get(
             }
         }
     }),
-    authenticateUser,
     async (req, res) => {
         try {
             const data = await UserModel.getUserById(req.params.id)
