@@ -189,8 +189,10 @@ export default {
         const skip = (pageNo - 1) * body.itemsPerPage
         const limit = body.itemsPerPage
         const data = await User.find({
+            name: { $regex: body.searchFilter, $options: "i" },
             updatedAt: { $gte: startDate, $lt: endDate },
             status: { $in: ["enabled"] },
+            subsstatus: { $in: ["Active", "Inactive", "Archived"] },
             userType: { $in: ["User"] },
             mobileVerified: true
         })
@@ -199,8 +201,10 @@ export default {
             .limit(limit)
             .exec()
         const count = await User.countDocuments({
+            name: { $regex: body.searchFilter, $options: "i" },
             updatedAt: { $gte: startDate, $lt: endDate },
             status: { $in: ["enabled"] },
+            subsstatus: { $in: ["Active", "Inactive", "Archived"] },
             userType: { $in: ["User"] },
             mobileVerified: true
         }).exec()
@@ -334,6 +338,7 @@ export default {
         const count = await User.countDocuments({
             updatedAt: { $gte: startDate, $lt: endDate },
             userType: "User",
+            subsstatus: { $in: ["Active"] },
             status: { $in: ["enabled"] },
             mobileVerified: true
         }).exec()
