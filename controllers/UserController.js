@@ -237,7 +237,71 @@ router.get(
         }
     }
 )
-
+router.put(
+    "/updateUserByAdmin/:id",
+    ValidateRequest({
+        params: {
+            type: "object",
+            properties: {
+                id: { type: "string", format: "objectId" }
+            }
+        }
+    }),
+    authenticateUser,
+    async (req, res) => {
+        try {
+            const data = await UserModel.updateUser(req.params.id, data)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+router.put(
+    "/updateUserPasswordByAdmin/:id",
+    ValidateRequest({
+        params: {
+            type: "object",
+            properties: {
+                id: { type: "string", format: "objectId" }
+            }
+        }
+    }),
+    authenticateUser,
+    async (req, res) => {
+        try {
+            const data = await UserModel.updateUserPassword(req.params.id, data)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+router.post(
+    "/addUserByAdmin",
+    ValidateRequest({
+        body: {
+            type: "object",
+            properties: {
+                name: { type: "string" },
+                mobile: { type: "string" },
+                password: { type: "string" }
+            }
+        }
+    }),
+    authenticateUser,
+    async (req, res) => {
+        try {
+            const data = await UserModel.addUserByAdmin(req.body)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
 //search
 
 router.post("/search", async (req, res) => {
@@ -258,5 +322,4 @@ router.post("/getTotalUsers", async (req, res) => {
         res.status(500).json(error)
     }
 })
-
 export default router

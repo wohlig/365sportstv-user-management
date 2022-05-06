@@ -137,6 +137,7 @@ export default {
             _id: userAvailable._id,
             name: userAvailable.name,
             mobile: userAvailable.mobile,
+            userType: userAvailable.userType,
             currentPlan: userAvailable.planDetails
         }
         var token = jwt.sign(objToGenerateAccessToken, jwtKey)
@@ -343,5 +344,47 @@ export default {
             mobileVerified: true
         }).exec()
         return count
+    },
+    async addUserByAdmin(data) {
+        const user = await User.findOne({
+            mobile: data.mobile
+        }).exec()
+        if (user) {
+            return { data: "User Already Exists", value: false }
+        }
+        const userObj = {
+            name: data.name,
+            mobile: data.mobile,
+            password: sha256(data.password),
+            userType: data.userType
+        }
+        let newUserObj = new User(userObj)
+        const saveUser = await newUserObj.save()
+        if (saveUser) {
+            return { data: "User Created Successfully", value: true }
+        }
+    },
+    async updateUserByAdmin(id, data) {
+        const user = await User.findOne({
+            _id: id
+        }).exec()
+        if (!user) {
+            return { data: "User Not Found", value: false }
+        }
+        const updateUser = await User.updateOne({ _id: id }, data).exec()
+    },
+    async updateUserPasswordByAdmin(id, data) {
+        const user = await User.findOne({
+            _id: id
+        })
+        if (!user) {
+            return { data: "User Not Found", value: false }
+        }
+        const updateUser = await User.updateOne(
+            { _id: id },
+            {
+                password: sha256(data.password)
+            }
+        ).exec()
     }
 }
