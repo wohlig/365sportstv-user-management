@@ -38,6 +38,32 @@ router.post(
         }
     }
 )
+router.post(
+    "/adminLogin",
+    ValidateRequest({
+        body: {
+            type: "object",
+            properties: {
+                mobile: { type: "string" },
+                password: { type: "string" },
+                userType: { type: "string", enum: ["Admin"] }
+            },
+            required: ["mobile", "password"]
+        }
+    }),
+    async (req, res) => {
+        try {
+            let outputData = await UserModel.adminLogin(req.body)
+            if (outputData && outputData.value) {
+                res.status(200).json(outputData.data)
+            } else {
+                res.status(500).json(outputData.data)
+            }
+        } catch (error) {
+            res.status(500).send(error)
+        }
+    }
+)
 // Forgot Password
 router.post(
     "/forgotPassword",
