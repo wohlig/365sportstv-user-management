@@ -357,8 +357,7 @@ export default {
             updatedAt: { $gte: startDate, $lt: endDate },
             userType: "User",
             subsstatus: { $in: ["Active"] },
-            status: { $in: ["enabled"] },
-            mobileVerified: true
+            status: { $in: ["enabled"] }
         }).exec()
         return count
     },
@@ -373,7 +372,8 @@ export default {
             name: data.name,
             mobile: data.mobile,
             password: sha256(data.password),
-            userType: data.userType
+            userType: data.userType,
+            mobileVerified: true
         }
         let newUserObj = new User(userObj)
         const saveUser = await newUserObj.save()

@@ -276,7 +276,7 @@ router.put(
     authenticateUser,
     async (req, res) => {
         try {
-            const data = await UserModel.updateUser(req.params.id, data)
+            const data = await UserModel.updateUser(req.params.id, req.body)
             res.json(data)
         } catch (error) {
             console.error(error)
@@ -297,7 +297,10 @@ router.put(
     authenticateUser,
     async (req, res) => {
         try {
-            const data = await UserModel.updateUserPassword(req.params.id, data)
+            const data = await UserModel.updateUserPasswordByAdmin(
+                req.params.id,
+                req.body
+            )
             res.json(data)
         } catch (error) {
             console.error(error)
