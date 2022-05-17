@@ -17,6 +17,7 @@ export default {
             name: data.name,
             mobile: data.mobile,
             password: sha256(data.password),
+            language: data.language,
             userType: data.userType
         }
 
@@ -151,6 +152,9 @@ export default {
         )
         if (_.isEmpty(checkUser)) {
             return { data: "Incorrect Username or Password.", value: false }
+        }
+        if (checkUser.status == "archived") {
+            return { data: "Account is blocked", value: false }
         }
         let encryptedPassword = sha256(data.password)
         if (checkUser.password != encryptedPassword) {
@@ -344,11 +348,33 @@ export default {
         }).exec()
     },
     getUserByAuthToken: async (id) => {
-        return await User.findOne({
-            _id: id
-        }).exec()
+        return await User.findOne(
+            {
+                _id: id
+            },
+            {
+                _id: 1,
+                name: 1,
+                mobile: 1,
+                planDetails: 1,
+                subStatus: 1,
+                status: 1,
+                language: 1
+            }
+        ).exec()
     },
-
+    updateUserLanguage: async (id, data) => {
+        const updateOutput = await User.updateOne(
+            { _id: id },
+            {
+                language: data.language
+            }
+        )
+        if (updateOutput && !updateOutput.modifiedCount) {
+            return { data: "Failed to Update User OTP", value: false }
+        }
+        return { data: "Otp Sent Successfully", value: true }
+    },
     getTotalUsers: async (body) => {
         var startDate = new Date(body.startDate)
         var endDate = new Date(body.endDate)

@@ -243,6 +243,15 @@ router.post("/getUserByAuthToken", authenticateUser, async (req, res) => {
         res.status(500).json(error)
     }
 })
+router.put("/updateUserLanguage", authenticateUser, async (req, res) => {
+    try {
+        const data = await UserModel.updateUserLanguage(req.user._id, req.body)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
 router.get(
     "/getUserById/:id",
     ValidateRequest({

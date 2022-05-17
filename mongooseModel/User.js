@@ -27,6 +27,10 @@ var schema = new Schema(
         freeTrialUsed: { type: Boolean, default: false },
         planDetails: {
             type: Schema.Types.Mixed
+        },
+        language: {
+            type: String,
+            default: "English",
         }
     },
     {
