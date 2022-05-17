@@ -39,6 +39,32 @@ router.post(
         }
     }
 )
+router.post(
+    "/adminLogin",
+    ValidateRequest({
+        body: {
+            type: "object",
+            properties: {
+                mobile: { type: "string" },
+                password: { type: "string" },
+                userType: { type: "string", enum: ["Admin"] }
+            },
+            required: ["mobile", "password"]
+        }
+    }),
+    async (req, res) => {
+        try {
+            let outputData = await UserModel.adminLogin(req.body)
+            if (outputData && outputData.value) {
+                res.status(200).json(outputData.data)
+            } else {
+                res.status(500).json(outputData.data)
+            }
+        } catch (error) {
+            res.status(500).send(error)
+        }
+    }
+)
 // Forgot Password
 router.post(
     "/forgotPassword",
@@ -218,8 +244,37 @@ router.post("/getUserByAuthToken", authenticateUser, async (req, res) => {
         res.status(500).json(error)
     }
 })
+router.put("/updateUserLanguage", authenticateUser, async (req, res) => {
+    try {
+        const data = await UserModel.updateUserLanguage(req.user._id, req.body)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
 router.get(
     "/getUserById/:id",
+    ValidateRequest({
+        params: {
+            type: "object",
+            properties: {
+                id: { type: "string", format: "objectId" }
+            }
+        }
+    }),
+    async (req, res) => {
+        try {
+            const data = await UserModel.getUserById(req.params.id)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+router.put(
+    "/updateUserByAdmin/:id",
     ValidateRequest({
         params: {
             type: "object",
@@ -231,7 +286,7 @@ router.get(
     authenticateUser,
     async (req, res) => {
         try {
-            const data = await UserModel.getUserById(req.params.id)
+            const data = await UserModel.updateUser(req.params.id, req.body)
             res.json(data)
         } catch (error) {
             console.error(error)
@@ -239,5 +294,71 @@ router.get(
         }
     }
 )
+router.put(
+    "/updateUserPasswordByAdmin/:id",
+    ValidateRequest({
+        params: {
+            type: "object",
+            properties: {
+                id: { type: "string", format: "objectId" }
+            }
+        }
+    }),
+    authenticateUser,
+    async (req, res) => {
+        try {
+            const data = await UserModel.updateUserPasswordByAdmin(
+                req.params.id,
+                req.body
+            )
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+router.post(
+    "/addUserByAdmin",
+    ValidateRequest({
+        body: {
+            type: "object",
+            properties: {
+                name: { type: "string" },
+                mobile: { type: "string" },
+                password: { type: "string" }
+            }
+        }
+    }),
+    authenticateUser,
+    async (req, res) => {
+        try {
+            const data = await UserModel.addUserByAdmin(req.body)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+//search
 
+router.post("/search", async (req, res) => {
+    try {
+        const data = await UserModel.search(req.body)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
+router.post("/getTotalUsers", async (req, res) => {
+    try {
+        const data = await UserModel.getTotalUsers(req.body)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
 export default router
