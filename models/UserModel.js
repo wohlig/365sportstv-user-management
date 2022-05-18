@@ -14,9 +14,7 @@ export default {
         ) {
             return { data: "User Already Exist", value: false }
         }
-        if (
-            data.userType = "Admin"
-        ) {
+        if ((data.userType = "Admin")) {
             return { data: "Non Authorized", value: false }
         }
         let newUserObj = {
