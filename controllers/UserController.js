@@ -285,7 +285,7 @@ router.put(
     authenticateAdmin,
     async (req, res) => {
         try {
-            const data = await UserModel.updateUser(req.params.id, req.body)
+            const data = await UserModel.updateUserByAdmin(req.params.id, req.body)
             res.json(data)
         } catch (error) {
             console.error(error)

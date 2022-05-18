@@ -14,6 +14,11 @@ export default {
         ) {
             return { data: "User Already Exist", value: false }
         }
+        if (
+            data.userType = "Admin"
+        ) {
+            return { data: "Non Authorized", value: false }
+        }
         let newUserObj = {
             name: data.name,
             mobile: data.mobile,
@@ -121,7 +126,6 @@ export default {
             mobileVerification: null,
             signUpDate: moment()
         }
-        console.log(objToUpdate.signUpDate)
         const userOutput = await User.updateOne({ _id: data._id }, objToUpdate)
         if (
             userOutput &&
@@ -343,7 +347,7 @@ export default {
             data.updateObj
         )
         if (updateOutput && !updateOutput.modifiedCount) {
-            return { data: "Failed to Update User OTP", value: false }
+            return { data: "Failed to Update User", value: false }
         }
         return { data: "Otp Sent Successfully", value: true }
     },
@@ -380,14 +384,10 @@ export default {
         }
         return { data: "Otp Sent Successfully", value: true }
     },
-    getTotalUsersFOrAdmin: async (body) => {
-        var startDate = new Date(body.startDate)
-        var endDate = new Date(body.endDate)
-        endDate.setDate(endDate.getDate() + 1)
+    getTotalUsersForAdmin: async (body) => {
         const count = await User.countDocuments({
-            updatedAt: { $gte: startDate, $lt: endDate },
             userType: "User",
-            subsstatus: { $in: ["Active"] },
+            mobileVerfied: true,
             status: { $in: ["enabled"] }
         }).exec()
         return count
