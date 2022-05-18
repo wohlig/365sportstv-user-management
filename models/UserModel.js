@@ -318,7 +318,8 @@ export default {
         const userAvailable = await User.findOne({
             _id: user._id,
             mobile: user.mobile,
-            mobileVerified: true
+            mobileVerified: true,
+            status: "enabled"
         })
         if (_.isEmpty(userAvailable) || !userAvailable._id) {
             return { data: "No Such User Exists", value: false }
@@ -351,13 +352,17 @@ export default {
     },
     getOne: async (mobile) => {
         return await User.findOne({
-            mobile: mobile
+            mobile: mobile,
+            status: "enabled",
+            mobileVerified: true
         }).exec()
     },
     getUserByAuthToken: async (id) => {
         return await User.findOne(
             {
-                _id: id
+                _id: id,
+                status: "enabled",
+                mobileVerified: true
             },
             {
                 _id: 1,
@@ -372,7 +377,7 @@ export default {
     },
     updateUserLanguage: async (id, data) => {
         const updateOutput = await User.updateOne(
-            { _id: id },
+            { _id: id, status: "enabled", mobileVerified: true },
             {
                 language: data.language
             }
@@ -392,7 +397,9 @@ export default {
     },
     async addUserByAdmin(data) {
         const user = await User.findOne({
-            mobile: data.mobile
+            mobile: data.mobile,
+            status: "enabled",
+            mobileVerified: true
         }).exec()
         if (user) {
             return { data: "User Already Exists", value: false }
@@ -412,7 +419,9 @@ export default {
     },
     async updateUserByAdmin(id, data) {
         const user = await User.findOne({
-            _id: id
+            _id: id,
+            status: "enabled",
+            mobileVerified: true
         }).exec()
         if (!user) {
             return { data: "User Not Found", value: false }
@@ -421,7 +430,9 @@ export default {
     },
     async updateUserPasswordByAdmin(id, data) {
         const user = await User.findOne({
-            _id: id
+            _id: id,
+            status: "enabled",
+            mobileVerified: true
         })
         if (!user) {
             return { data: "User Not Found", value: false }
