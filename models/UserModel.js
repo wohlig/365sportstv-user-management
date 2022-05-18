@@ -1,6 +1,7 @@
 import { sha256 } from "js-sha256"
 import User from "../mongooseModel/User"
 import OtpCount from "../mongooseModel/OtpCount"
+import moment from "moment"
 
 export default {
     async signup(data) {
@@ -117,8 +118,10 @@ export default {
         }
         let objToUpdate = {
             mobileVerified: true,
-            mobileVerification: null
+            mobileVerification: null,
+            signUpDate: moment()
         }
+        console.log(objToUpdate.signUpDate)
         const userOutput = await User.updateOne({ _id: data._id }, objToUpdate)
         if (
             userOutput &&
@@ -147,7 +150,7 @@ export default {
     },
     async login(data) {
         const checkUser = await User.findOne(
-            { mobile: data.mobile },
+            { mobile: data.mobile, mobileVerified: true },
             { name: 1, accessLevel: 1, mobile: 1, password: 1 }
         )
         if (_.isEmpty(checkUser)) {
@@ -170,10 +173,11 @@ export default {
             _id: id
         }).exec()
     },
-    search: async (body) => {
+
+    searchForAdmin: async (body) => {
         let _ = require("lodash")
         if (_.isEmpty(body.sortBy)) {
-            body.sortBy = ["updatedAt"]
+            body.sortBy = ["signUpDate"]
         }
         if (_.isEmpty(body.sortDesc)) {
             body.sortDesc = [-1]
@@ -197,7 +201,6 @@ export default {
             name: { $regex: body.searchFilter, $options: "i" },
             updatedAt: { $gte: startDate, $lt: endDate },
             status: { $in: ["enabled"] },
-            subsstatus: { $in: ["Active", "Inactive", "Archived"] },
             userType: { $in: ["User"] },
             mobileVerified: true
         })
@@ -209,7 +212,6 @@ export default {
             name: { $regex: body.searchFilter, $options: "i" },
             updatedAt: { $gte: startDate, $lt: endDate },
             status: { $in: ["enabled"] },
-            subsstatus: { $in: ["Active", "Inactive", "Archived"] },
             userType: { $in: ["User"] },
             mobileVerified: true
         }).exec()
@@ -223,6 +225,9 @@ export default {
         )
         if (_.isEmpty(checkUser)) {
             return { data: "Incorrect Username or Password.", value: false }
+        }
+        if (checkUser.status == "archived") {
+            return { data: "Account is blocked", value: false }
         }
         let encryptedPassword = sha256(data.password)
         if (checkUser.password != encryptedPassword) {
@@ -375,7 +380,7 @@ export default {
         }
         return { data: "Otp Sent Successfully", value: true }
     },
-    getTotalUsers: async (body) => {
+    getTotalUsersFOrAdmin: async (body) => {
         var startDate = new Date(body.startDate)
         var endDate = new Date(body.endDate)
         endDate.setDate(endDate.getDate() + 1)

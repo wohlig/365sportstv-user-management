@@ -25,7 +25,8 @@ var schema = new Schema(
         language: {
             type: String,
             default: "English"
-        }
+        },
+        signUpDate: { type: Date }
     },
     {
         timestamps: true

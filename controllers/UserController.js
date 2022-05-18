@@ -2,7 +2,6 @@ const router = Router()
 // Signup
 router.post("/signup", async (req, res) => {
     try {
-        console.log("In Signup")
         var data = await UserModel.signup(req.body)
         if (data.value) {
             res.status(200).json(data.data)
@@ -283,7 +282,7 @@ router.put(
             }
         }
     }),
-    authenticateUser,
+    authenticateAdmin,
     async (req, res) => {
         try {
             const data = await UserModel.updateUser(req.params.id, req.body)
@@ -304,7 +303,7 @@ router.put(
             }
         }
     }),
-    authenticateUser,
+    authenticateAdmin,
     async (req, res) => {
         try {
             const data = await UserModel.updateUserPasswordByAdmin(
@@ -330,7 +329,7 @@ router.post(
             }
         }
     }),
-    authenticateUser,
+    authenticateAdmin,
     async (req, res) => {
         try {
             const data = await UserModel.addUserByAdmin(req.body)
@@ -343,18 +342,18 @@ router.post(
 )
 //search
 
-router.post("/search", async (req, res) => {
+router.post("/searchForAdmin", authenticateAdmin, async (req, res) => {
     try {
-        const data = await UserModel.search(req.body)
+        const data = await UserModel.searchForAdmin(req.body)
         res.json(data)
     } catch (error) {
         console.error(error)
         res.status(500).json(error)
     }
 })
-router.post("/getTotalUsers", async (req, res) => {
+router.post("/getTotalUsersForAdmin", authenticateAdmin, async (req, res) => {
     try {
-        const data = await UserModel.getTotalUsers(req.body)
+        const data = await UserModel.getTotalUsersForAdmin(req.body)
         res.json(data)
     } catch (error) {
         console.error(error)
