@@ -18,12 +18,6 @@ var schema = new Schema(
             default: "enabled",
             index: true
         },
-        subsstatus: {
-            type: String,
-            enum: ["Active", "Inactive", "Archived"],
-            default: "Active",
-            index: true
-        },
         freeTrialUsed: { type: Boolean, default: false },
         planDetails: {
             type: Schema.Types.Mixed
