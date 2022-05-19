@@ -40,6 +40,7 @@ router.post(
 )
 router.post(
     "/adminLogin",
+    authenticateAdmin,
     ValidateRequest({
         body: {
             type: "object",
@@ -262,6 +263,7 @@ router.get(
             }
         }
     }),
+    authenticateAdmin,
     async (req, res) => {
         try {
             const data = await UserModel.getUserById(req.params.id)
