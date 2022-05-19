@@ -153,7 +153,7 @@ export default {
     async login(data) {
         const checkUser = await User.findOne(
             { mobile: data.mobile, mobileVerified: true },
-            { name: 1, accessLevel: 1, mobile: 1, password: 1, status: 1, }
+            { name: 1, accessLevel: 1, mobile: 1, password: 1, status: 1 }
         )
         if (_.isEmpty(checkUser)) {
             return { data: "Incorrect Username or Password.", value: false }
