@@ -14,7 +14,7 @@ export default {
         ) {
             return { data: "User Already Exist", value: false }
         }
-        if ((data.userType = "Admin")) {
+        if (data.userType == "Admin") {
             return { data: "Non Authorized", value: false }
         }
         let newUserObj = {
@@ -199,24 +199,25 @@ export default {
         const pageNo = body.page
         const skip = (pageNo - 1) * body.itemsPerPage
         const limit = body.itemsPerPage
-        const data = await User.find({
-            name: { $regex: body.searchFilter, $options: "i" },
-            updatedAt: { $gte: startDate, $lt: endDate },
-            status: { $in: ["enabled"] },
-            userType: { $in: ["User"] },
-            mobileVerified: true
-        })
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .exec()
-        const count = await User.countDocuments({
-            name: { $regex: body.searchFilter, $options: "i" },
-            updatedAt: { $gte: startDate, $lt: endDate },
-            status: { $in: ["enabled"] },
-            userType: { $in: ["User"] },
-            mobileVerified: true
-        }).exec()
+        const [data, count] = await Promise.all([
+            User.find({
+                name: { $regex: body.searchFilter, $options: "i" },
+                updatedAt: { $gte: startDate, $lt: endDate },
+                status: { $in: ["enabled"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            })
+                .sort(sort)
+                .skip(skip)
+                .limit(limit),
+            User.countDocuments({
+                name: { $regex: body.searchFilter, $options: "i" },
+                updatedAt: { $gte: startDate, $lt: endDate },
+                status: { $in: ["enabled"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            }).exec()
+        ])
         const maxPage = Math.ceil(count / limit)
         return { data, count, maxPage }
     },
@@ -230,23 +231,6 @@ export default {
         }
         if (checkUser.status == "archived") {
             return { data: "Account is blocked", value: false }
-        }
-        let encryptedPassword = sha256(data.password)
-        if (checkUser.password != encryptedPassword) {
-            return { data: "Incorrect Password", value: false }
-        }
-        const obj = {
-            _id: checkUser._id
-        }
-        return UserModel.generateAccessToken(obj)
-    },
-    async adminLogin(data) {
-        const checkUser = await User.findOne(
-            { mobile: data.mobile, userType: "Admin" },
-            { name: 1, accessLevel: 1, mobile: 1, password: 1 }
-        )
-        if (_.isEmpty(checkUser)) {
-            return { data: "Incorrect Username or Password.", value: false }
         }
         let encryptedPassword = sha256(data.password)
         if (checkUser.password != encryptedPassword) {
@@ -301,10 +285,6 @@ export default {
         return { data: accessTokenData.data, value: true }
     },
     async resetPassword(data, user) {
-        // const sub = jwt.verify(data.accessToken, jwtKey)
-        // if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
-        //     return { data: "Incorrect AccessToken", value: false }
-        // }
         const userAvailable = await User.findOne({
             _id: user._id,
             mobile: user.mobile,
@@ -328,10 +308,6 @@ export default {
         return { data: "Failed to Change Password", value: false }
     },
     async changePassword(data, user) {
-        // const sub = jwt.verify(data.accessToken, jwtKey)
-        // if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
-        //     return { data: "Incorrect AccessToken", value: false }
-        // }
         const userAvailable = await User.findOne({
             _id: user._id,
             mobile: user.mobile,
