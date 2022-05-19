@@ -153,7 +153,7 @@ export default {
     async login(data) {
         const checkUser = await User.findOne(
             { mobile: data.mobile, mobileVerified: true },
-            { name: 1, accessLevel: 1, mobile: 1, password: 1 }
+            { name: 1, accessLevel: 1, mobile: 1, password: 1, status: 1, }
         )
         if (_.isEmpty(checkUser)) {
             return { data: "Incorrect Username or Password.", value: false }
@@ -378,7 +378,6 @@ export default {
         return await User.findOne(
             {
                 _id: id,
-                status: "enabled",
                 mobileVerified: true
             },
             {
@@ -386,7 +385,6 @@ export default {
                 name: 1,
                 mobile: 1,
                 planDetails: 1,
-                subStatus: 1,
                 status: 1,
                 language: 1
             }
@@ -460,5 +458,22 @@ export default {
                 password: sha256(data.password)
             }
         ).exec()
+    },
+    async blockUserByAdmin(id) {
+        const user = await User.findOne({
+            _id: id,
+            status: "enabled",
+            mobileVerified: true
+        })
+        if (!user) {
+            return { data: "User Not Found", value: false }
+        }
+        const updateUser = await User.updateOne(
+            { _id: id },
+            {
+                status: "archived"
+            }
+        ).exec()
+        return { data: "User Blocked Successfully", value: true }
     }
 }

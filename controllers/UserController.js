@@ -365,4 +365,21 @@ router.post("/getTotalUsersForAdmin", authenticateAdmin, async (req, res) => {
         res.status(500).json(error)
     }
 })
+router.put("/blockUserByAdmin/:id", authenticateAdmin, async (req, res) => {
+    ValidateRequest({
+        params: {
+            type: "object",
+            properties: {
+                id: { type: "string", format: "objectId" }
+            }
+        }
+    })
+    try {
+        const data = await UserModel.blockUserByAdmin(req.params.id)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
 export default router
