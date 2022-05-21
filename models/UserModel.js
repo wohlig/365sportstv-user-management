@@ -1,6 +1,7 @@
 import { sha256 } from "js-sha256"
 import User from "../mongooseModel/User"
 import OtpCount from "../mongooseModel/OtpCount"
+import moment from "moment"
 
 export default {
     async signup(data) {
@@ -12,6 +13,9 @@ export default {
             ifAlreadyUser.mobileVerified
         ) {
             return { data: "User Already Exist", value: false }
+        }
+        if (data.userType == "Admin") {
+            return { data: "Non Authorized", value: false }
         }
         let newUserObj = {
             name: data.name,
@@ -117,7 +121,8 @@ export default {
         }
         let objToUpdate = {
             mobileVerified: true,
-            mobileVerification: null
+            mobileVerification: null,
+            signUpDate: moment()
         }
         const userOutput = await User.updateOne({ _id: data._id }, objToUpdate)
         if (
@@ -147,8 +152,8 @@ export default {
     },
     async login(data) {
         const checkUser = await User.findOne(
-            { mobile: data.mobile },
-            { name: 1, accessLevel: 1, mobile: 1, password: 1 }
+            { mobile: data.mobile, mobileVerified: true },
+            { name: 1, accessLevel: 1, mobile: 1, password: 1, status: 1 }
         )
         if (_.isEmpty(checkUser)) {
             return { data: "Incorrect Username or Password.", value: false }
@@ -170,10 +175,11 @@ export default {
             _id: id
         }).exec()
     },
-    search: async (body) => {
+
+    searchForAdmin: async (body) => {
         let _ = require("lodash")
         if (_.isEmpty(body.sortBy)) {
-            body.sortBy = ["updatedAt"]
+            body.sortBy = ["signUpDate"]
         }
         if (_.isEmpty(body.sortDesc)) {
             body.sortDesc = [-1]
@@ -193,26 +199,25 @@ export default {
         const pageNo = body.page
         const skip = (pageNo - 1) * body.itemsPerPage
         const limit = body.itemsPerPage
-        const data = await User.find({
-            name: { $regex: body.searchFilter, $options: "i" },
-            updatedAt: { $gte: startDate, $lt: endDate },
-            status: { $in: ["enabled"] },
-            subsstatus: { $in: ["Active", "Inactive", "Archived"] },
-            userType: { $in: ["User"] },
-            mobileVerified: true
-        })
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .exec()
-        const count = await User.countDocuments({
-            name: { $regex: body.searchFilter, $options: "i" },
-            updatedAt: { $gte: startDate, $lt: endDate },
-            status: { $in: ["enabled"] },
-            subsstatus: { $in: ["Active", "Inactive", "Archived"] },
-            userType: { $in: ["User"] },
-            mobileVerified: true
-        }).exec()
+        const [data, count] = await Promise.all([
+            User.find({
+                name: { $regex: body.searchFilter, $options: "i" },
+                updatedAt: { $gte: startDate, $lt: endDate },
+                status: { $in: ["enabled"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            })
+                .sort(sort)
+                .skip(skip)
+                .limit(limit),
+            User.countDocuments({
+                name: { $regex: body.searchFilter, $options: "i" },
+                updatedAt: { $gte: startDate, $lt: endDate },
+                status: { $in: ["enabled"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            }).exec()
+        ])
         const maxPage = Math.ceil(count / limit)
         return { data, count, maxPage }
     },
@@ -223,6 +228,9 @@ export default {
         )
         if (_.isEmpty(checkUser)) {
             return { data: "Incorrect Username or Password.", value: false }
+        }
+        if (checkUser.status == "archived") {
+            return { data: "Account is blocked", value: false }
         }
         let encryptedPassword = sha256(data.password)
         if (checkUser.password != encryptedPassword) {
@@ -277,10 +285,6 @@ export default {
         return { data: accessTokenData.data, value: true }
     },
     async resetPassword(data, user) {
-        // const sub = jwt.verify(data.accessToken, jwtKey)
-        // if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
-        //     return { data: "Incorrect AccessToken", value: false }
-        // }
         const userAvailable = await User.findOne({
             _id: user._id,
             mobile: user.mobile,
@@ -304,14 +308,11 @@ export default {
         return { data: "Failed to Change Password", value: false }
     },
     async changePassword(data, user) {
-        // const sub = jwt.verify(data.accessToken, jwtKey)
-        // if (_.isEmpty(sub) || !sub._id || !sub.mobile || !sub.name) {
-        //     return { data: "Incorrect AccessToken", value: false }
-        // }
         const userAvailable = await User.findOne({
             _id: user._id,
             mobile: user.mobile,
-            mobileVerified: true
+            mobileVerified: true,
+            status: "enabled"
         })
         if (_.isEmpty(userAvailable) || !userAvailable._id) {
             return { data: "No Such User Exists", value: false }
@@ -338,26 +339,28 @@ export default {
             data.updateObj
         )
         if (updateOutput && !updateOutput.modifiedCount) {
-            return { data: "Failed to Update User OTP", value: false }
+            return { data: "Failed to Update User", value: false }
         }
         return { data: "Otp Sent Successfully", value: true }
     },
     getOne: async (mobile) => {
         return await User.findOne({
-            mobile: mobile
+            mobile: mobile,
+            status: "enabled",
+            mobileVerified: true
         }).exec()
     },
     getUserByAuthToken: async (id) => {
         return await User.findOne(
             {
-                _id: id
+                _id: id,
+                mobileVerified: true
             },
             {
                 _id: 1,
                 name: 1,
                 mobile: 1,
                 planDetails: 1,
-                subStatus: 1,
                 status: 1,
                 language: 1
             }
@@ -365,7 +368,7 @@ export default {
     },
     updateUserLanguage: async (id, data) => {
         const updateOutput = await User.updateOne(
-            { _id: id },
+            { _id: id, status: "enabled", mobileVerified: true },
             {
                 language: data.language
             }
@@ -375,21 +378,19 @@ export default {
         }
         return { data: "Otp Sent Successfully", value: true }
     },
-    getTotalUsers: async (body) => {
-        var startDate = new Date(body.startDate)
-        var endDate = new Date(body.endDate)
-        endDate.setDate(endDate.getDate() + 1)
+    getTotalUsersForAdmin: async (body) => {
         const count = await User.countDocuments({
-            updatedAt: { $gte: startDate, $lt: endDate },
             userType: "User",
-            subsstatus: { $in: ["Active"] },
+            mobileVerfied: true,
             status: { $in: ["enabled"] }
         }).exec()
         return count
     },
     async addUserByAdmin(data) {
         const user = await User.findOne({
-            mobile: data.mobile
+            mobile: data.mobile,
+            status: "enabled",
+            mobileVerified: true
         }).exec()
         if (user) {
             return { data: "User Already Exists", value: false }
@@ -409,7 +410,9 @@ export default {
     },
     async updateUserByAdmin(id, data) {
         const user = await User.findOne({
-            _id: id
+            _id: id,
+            status: "enabled",
+            mobileVerified: true
         }).exec()
         if (!user) {
             return { data: "User Not Found", value: false }
@@ -418,7 +421,9 @@ export default {
     },
     async updateUserPasswordByAdmin(id, data) {
         const user = await User.findOne({
-            _id: id
+            _id: id,
+            status: "enabled",
+            mobileVerified: true
         })
         if (!user) {
             return { data: "User Not Found", value: false }
@@ -429,5 +434,22 @@ export default {
                 password: sha256(data.password)
             }
         ).exec()
+    },
+    async blockUserByAdmin(id) {
+        const user = await User.findOne({
+            _id: id,
+            status: "enabled",
+            mobileVerified: true
+        })
+        if (!user) {
+            return { data: "User Not Found", value: false }
+        }
+        const updateUser = await User.updateOne(
+            { _id: id },
+            {
+                status: "archived"
+            }
+        ).exec()
+        return { data: "User Blocked Successfully", value: true }
     }
 }
