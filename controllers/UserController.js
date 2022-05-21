@@ -40,7 +40,6 @@ router.post(
 )
 router.post(
     "/adminLogin",
-    authenticateAdmin,
     ValidateRequest({
         body: {
             type: "object",
