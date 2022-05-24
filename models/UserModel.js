@@ -400,7 +400,8 @@ export default {
             mobile: data.mobile,
             password: sha256(data.password),
             userType: data.userType,
-            mobileVerified: true
+            mobileVerified: true,
+            signUpDate: moment()
         }
         let newUserObj = new User(userObj)
         const saveUser = await newUserObj.save()
