@@ -361,7 +361,7 @@ export default {
                 planDetails: 1,
                 status: 1,
                 language: 1,
-                freeTrialUsed: 1,
+                freeTrialUsed: 1
             }
         ).exec()
     },
