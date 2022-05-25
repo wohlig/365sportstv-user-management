@@ -44,22 +44,22 @@ jobs:
             - uses: actions/checkout@v2
             - name: Build the Docker image
               run: |
-                 
+
                   docker build -t 032313255471.dkr.ecr.eu-central-1.amazonaws.com/user-mangement:$GITHUB_REF_NAME-$GITHUB_SHA . 
                   docker push 032313255471.dkr.ecr.eu-central-1.amazonaws.com/user-mangement:$GITHUB_REF_NAME-$GITHUB_SHA
-                  
+
                   git clone https://${{ secrets.AWS_GITHUB_USER }}:${{ secrets.AWS_GITHUB_TOKEN }}@github.com/wohlig/Sportstv365-GitOps
-                 
+
                   cd Sportstv365-GitOps
-                 
+
                   git checkout dev
-                 
+
                   git config user.name "$GITHUB_ACTOR"
                   git config user.email "$GITHUB_ACTOR@wohlig.com"
-                  
+
                   yq e '.spec.template.spec.containers[0].image = "032313255471.dkr.ecr.eu-central-1.amazonaws.com/user-mangement:${{ env.GITHUB_BRANCH }}"' -i deployment.apps/user-management.yaml
-                  
+
                   git add .
-                 
+
                   git commit -m "updating newer image"
                   git push --set-upstream origin dev
