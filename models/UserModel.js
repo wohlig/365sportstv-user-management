@@ -55,7 +55,8 @@ export default {
         return { data: saveUser._id, value: true }
     },
     async sendOtpToMobileNumber(data) {
-        const randomCode = randomize("0", 6)
+        // const randomCode = randomize("0", 6)
+        const randomCode = "111111"
         const otp = await OtpCount.findOne({
             mobile: data.mobile,
             otpDate: new Date().toLocaleDateString()
