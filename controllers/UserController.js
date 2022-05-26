@@ -96,10 +96,9 @@ router.post(
         body: {
             type: "object",
             properties: {
-                oldPassword: { type: "string" },
                 password: { type: "string" }
             },
-            required: ["oldPassword", "password"]
+            required: ["password"]
         }
     }),
     authenticateUser,

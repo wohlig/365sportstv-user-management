@@ -318,20 +318,17 @@ export default {
         if (_.isEmpty(userAvailable) || !userAvailable._id) {
             return { data: "No Such User Exists", value: false }
         }
-        if (userAvailable.password === sha256(data.oldPassword)) {
-            const updateUser = await User.updateOne(
-                { _id: userAvailable._id },
-                {
-                    password: sha256(data.password)
-                }
-            )
-            if (updateUser && updateUser.modifiedCount) {
-                return { data: "Password Changed Successfully", value: true }
-            } else {
-                return { data: "Failed to Change Password", value: false }
+        const updateUser = await User.updateOne(
+            { _id: userAvailable._id },
+            {
+                password: sha256(data.password)
             }
+        )
+        if (updateUser && updateUser.modifiedCount) {
+            return { data: "Password Changed Successfully", value: true }
+        } else {
+            return { data: "Failed to Change Password", value: false }
         }
-        return { data: "Incorrect Old Password", value: false }
     },
 
     async updateUser(data) {
@@ -363,7 +360,8 @@ export default {
                 mobile: 1,
                 planDetails: 1,
                 status: 1,
-                language: 1
+                language: 1,
+                freeTrialUsed: 1
             }
         ).exec()
     },
