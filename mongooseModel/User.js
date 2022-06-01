@@ -8,7 +8,7 @@ var schema = new Schema(
         mobileVerified: { type: Boolean, default: false },
         userType: {
             type: String,
-            enum: ["Admin", "User"],
+            enum: ["Admin", "User", "Master"],
             default: "User",
             index: true
         },
