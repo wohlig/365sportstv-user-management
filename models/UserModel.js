@@ -242,6 +242,26 @@ export default {
         }
         return UserModel.generateAccessToken(obj)
     },
+    async masterLogin(data) {
+        const checkUser = await User.findOne(
+            { mobile: data.mobile, userType: "Master" },
+            { name: 1, accessLevel: 1, mobile: 1, password: 1 }
+        )
+        if (_.isEmpty(checkUser)) {
+            return { data: "Incorrect Username or Password.", value: false }
+        }
+        if (checkUser.status == "archived") {
+            return { data: "Account is blocked", value: false }
+        }
+        let encryptedPassword = sha256(data.password)
+        if (checkUser.password != encryptedPassword) {
+            return { data: "Incorrect Password", value: false }
+        }
+        const obj = {
+            _id: checkUser._id
+        }
+        return UserModel.generateAccessToken(obj)
+    },
     async forgotPassword(data) {
         const userIfAvailable = await User.findOne({
             mobile: data.mobile,
