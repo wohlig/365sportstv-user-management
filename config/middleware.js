@@ -49,6 +49,7 @@ global.authenticateAdmin = async (req, res, next) => {
         res.status(401).send("Not Authorized")
     }
 }
+
 global.verifySubscribedUser = async (req, res, next) => {
     if (req && req.headers && req.headers.authorization) {
         var decoded
