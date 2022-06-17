@@ -417,7 +417,7 @@ export default {
     getTotalUsersForAdmin: async (body) => {
         const count = await User.countDocuments({
             userType: "User",
-            mobileVerfied: true,
+            mobileVerified: true,
             status: { $in: ["enabled"] }
         }).exec()
         return count
