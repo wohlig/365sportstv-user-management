@@ -2,7 +2,7 @@ import { sha256 } from "js-sha256"
 import User from "../mongooseModel/User"
 import OtpCount from "../mongooseModel/OtpCount"
 import moment from "moment"
-
+import axios from "axios"
 export default {
     async signup(data) {
         let saveUser
@@ -55,8 +55,8 @@ export default {
         return { data: saveUser._id, value: true }
     },
     async sendOtpToMobileNumber(data) {
-        // const randomCode = randomize("0", 6)
-        const randomCode = "111111"
+        const randomCode = randomize("0", 6)
+        // const randomCode = "111111"
         const otp = await OtpCount.findOne({
             mobile: data.mobile,
             otpDate: new Date().toLocaleDateString()
@@ -78,26 +78,43 @@ export default {
                     value: false
                 }
             } else {
-                const updateOtpCount = await OtpCount.updateOne(
-                    { _id: otp._id },
-                    {
-                        $inc: { otpCount: 1 }
+                let url =
+                    process.env["TWOFACTOR_URL"] +
+                    "/" +
+                    process.env["TWOFACTOR_APIKEY"] +
+                    "/SMS/" +
+                    data.mobile +
+                    "/" +
+                    randomCode
+                console.log(url)
+                const otpSent = await axios.get(url)
+                if (
+                    otpSent &&
+                    otpSent.data &&
+                    otpSent.data.Status &&
+                    otpSent.data.Status.toLowerCase() == "success"
+                ) {
+                    const updateOtpCount = await OtpCount.updateOne(
+                        { _id: otp._id },
+                        {
+                            $inc: { otpCount: 1 }
+                        }
+                    )
+                    if (updateOtpCount && !updateOtpCount.modifiedCount) {
+                        return { data: "Failed to Update Otp", value: false }
                     }
-                )
-                if (updateOtpCount && !updateOtpCount.modifiedCount) {
-                    return { data: "Failed to Update Otp", value: false }
+                    if (randomCode) {
+                        data.updateObj = {
+                            mobileVerification: randomCode
+                        }
+                        return await UserModel.updateUser(data)
+                    } else {
+                        return { data: "Failed to Send SMS", value: false }
+                    }
+                } else {
+                    return { data: "Failed to Sent Otp", value: false }
                 }
             }
-        }
-        // let outp = await axios.get(`https://wtsapp.aronertech.com/api/sendText?token=${wtsapInstance}&phone=91${data.mobile}&message=${randomCode} is your One time Password for Verification of Taj-Exchange Account. Don't share it`)
-        // if (outp.data.status === 'success') {
-        if (randomCode) {
-            data.updateObj = {
-                mobileVerification: randomCode
-            }
-            return await UserModel.updateUser(data)
-        } else {
-            return { data: "Failed to Send SMS", value: false }
         }
     },
     async verifyMobile(data) {
