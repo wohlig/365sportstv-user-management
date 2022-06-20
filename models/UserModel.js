@@ -44,7 +44,6 @@ export default {
             }
             saveUser = ifAlreadyUser
         }
-
         const otpOutput = await UserModel.sendOtpToMobileNumber({
             mobile: data.mobile
         })
@@ -56,65 +55,63 @@ export default {
     },
     async sendOtpToMobileNumber(data) {
         const randomCode = randomize("0", 6)
-        // const randomCode = "111111"
         const otp = await OtpCount.findOne({
             mobile: data.mobile,
             otpDate: new Date().toLocaleDateString()
         })
-        if (!otp || !otp._id) {
-            const otpCount = new OtpCount({
-                mobile: data.mobile,
-                otpDate: new Date().toLocaleDateString(),
-                otpCount: 1
-            })
-            const saveOtpCount = await otpCount.save()
-            if (saveOtpCount && !saveOtpCount._id) {
-                return { data: "Failed to Save Otp", value: false }
+        if (otp && otp._id && otp.otpCount >= 3) {
+            return {
+                data: "You have exceeded the maximum limit of OTP",
+                value: false
             }
-        } else {
-            if (otp && otp.otpCount >= 3) {
-                return {
-                    data: "You have exceeded the maximum limit of OTP",
-                    value: false
+        }
+        let url =
+            process.env["TWOFACTOR_URL"] +
+            "/" +
+            process.env["TWOFACTOR_APIKEY"] +
+            "/SMS/" +
+            data.mobile +
+            "/" +
+            randomCode
+        const otpSent = await axios.get(url)
+        if (
+            otpSent &&
+            otpSent.data &&
+            otpSent.data.Status &&
+            otpSent.data.Status.toLowerCase() == "success"
+        ) {
+            if (!otp || !otp._id) {
+                const otpCount = new OtpCount({
+                    mobile: data.mobile,
+                    otpDate: new Date().toLocaleDateString(),
+                    otpCount: 1
+                })
+                const saveOtpCount = await otpCount.save()
+                if (saveOtpCount && !saveOtpCount._id) {
+                    console.log("2")
+                    return { data: "Failed to Save Otp", value: false }
                 }
             } else {
-                let url =
-                    process.env["TWOFACTOR_URL"] +
-                    "/" +
-                    process.env["TWOFACTOR_APIKEY"] +
-                    "/SMS/" +
-                    data.mobile +
-                    "/" +
-                    randomCode
-                console.log(url)
-                const otpSent = await axios.get(url)
-                if (
-                    otpSent &&
-                    otpSent.data &&
-                    otpSent.data.Status &&
-                    otpSent.data.Status.toLowerCase() == "success"
-                ) {
-                    const updateOtpCount = await OtpCount.updateOne(
-                        { _id: otp._id },
-                        {
-                            $inc: { otpCount: 1 }
-                        }
-                    )
-                    if (updateOtpCount && !updateOtpCount.modifiedCount) {
-                        return { data: "Failed to Update Otp", value: false }
+                const updateOtpCount = await OtpCount.updateOne(
+                    { _id: otp._id },
+                    {
+                        $inc: { otpCount: 1 }
                     }
-                    if (randomCode) {
-                        data.updateObj = {
-                            mobileVerification: randomCode
-                        }
-                        return await UserModel.updateUser(data)
-                    } else {
-                        return { data: "Failed to Send SMS", value: false }
-                    }
-                } else {
-                    return { data: "Failed to Sent Otp", value: false }
+                )
+                if (updateOtpCount && !updateOtpCount.modifiedCount) {
+                    return { data: "Failed to Update Otp", value: false }
                 }
             }
+            if (randomCode) {
+                data.updateObj = {
+                    mobileVerification: randomCode
+                }
+                return await UserModel.updateUser(data)
+            } else {
+                return { data: "Failed to Send SMS", value: false }
+            }
+        } else {
+            return { data: "Failed to Sent Otp", value: false }
         }
     },
     async verifyMobile(data) {
