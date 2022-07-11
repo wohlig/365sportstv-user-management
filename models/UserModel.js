@@ -419,6 +419,14 @@ export default {
         }).exec()
         return count
     },
+    getTotalBlockedUsersForAdmin: async (body) => {
+        const count = await User.countDocuments({
+            userType: "User",
+            mobileVerified: true,
+            status: { $in: ["archived"] }
+        }).exec()
+        return count
+    },
     async addUserByAdmin(data) {
         const user = await User.findOne({
             mobile: data.mobile,
