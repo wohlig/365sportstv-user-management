@@ -533,5 +533,23 @@ export default {
             }
         ).exec()
         return { data: "User Blocked Successfully", value: true }
+    },
+    async unblockUserByAdmin(id) {
+        console.log("IDDD")
+        const user = await User.findOne({
+            _id: id,
+            status: "archived",
+            mobileVerified: true
+        })
+        if (!user) {
+            return { data: "User Not Found", value: false }
+        }
+        const updateUser = await User.updateOne(
+            { _id: id },
+            {
+                status: "enabled"
+            }
+        ).exec()
+        return { data: "User Unblocked Successfully", value: true }
     }
 }
