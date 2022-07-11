@@ -236,6 +236,46 @@ export default {
         const maxPage = Math.ceil(count / limit)
         return { data, count, maxPage }
     },
+    searchBlockedUserForAdmin: async (body) => {
+        let _ = require("lodash")
+        if (_.isEmpty(body.sortBy)) {
+            body.sortBy = ["signUpDate"]
+        }
+        if (_.isEmpty(body.sortDesc)) {
+            body.sortDesc = [-1]
+        } else {
+            if (body.sortDesc[0] === false) {
+                body.sortDesc[0] = -1
+            }
+            if (body.sortDesc[0] === true) {
+                body.sortDesc[0] = 1
+            }
+        }
+        var sort = {}
+        sort[body.sortBy[0]] = body.sortDesc[0]
+        const pageNo = body.page
+        const skip = (pageNo - 1) * body.itemsPerPage
+        const limit = body.itemsPerPage
+        const [data, count] = await Promise.all([
+            User.find({
+                name: { $regex: body.searchFilter, $options: "i" },
+                status: { $in: ["archived"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            })
+                .sort(sort)
+                .skip(skip)
+                .limit(limit),
+            User.countDocuments({
+                name: { $regex: body.searchFilter, $options: "i" },
+                status: { $in: ["archived"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            }).exec()
+        ])
+        const maxPage = Math.ceil(count / limit)
+        return { data, count, maxPage }
+    },
     async adminLogin(data) {
         const checkUser = await User.findOne(
             { mobile: data.mobile, userType: "Admin" },
@@ -411,7 +451,7 @@ export default {
         }
         return { data: "Otp Sent Successfully", value: true }
     },
-    getTotalUsersForAdmin: async (body) => {
+    getTotalUsersForAdmin: async () => {
         const count = await User.countDocuments({
             userType: "User",
             mobileVerified: true,
@@ -419,7 +459,7 @@ export default {
         }).exec()
         return count
     },
-    getTotalBlockedUsersForAdmin: async (body) => {
+    getTotalBlockedUsersForAdmin: async () => {
         const count = await User.countDocuments({
             userType: "User",
             mobileVerified: true,
