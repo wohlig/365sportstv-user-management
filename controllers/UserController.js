@@ -389,15 +389,19 @@ router.post("/getTotalUsersForAdmin", authenticateAdmin, async (req, res) => {
         res.status(500).json(error)
     }
 })
-router.post("/getTotalBlockedUsersForAdmin", authenticateAdmin, async (req, res) => {
-    try {
-        const data = await UserModel.getTotalBlockedUsersForAdmin(req.body)
-        res.json(data)
-    } catch (error) {
-        console.error(error)
-        res.status(500).json(error)
+router.post(
+    "/getTotalBlockedUsersForAdmin",
+    authenticateAdmin,
+    async (req, res) => {
+        try {
+            const data = await UserModel.getTotalBlockedUsersForAdmin(req.body)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
     }
-})
+)
 router.put("/blockUserByAdmin/:id", authenticateAdmin, async (req, res) => {
     ValidateRequest({
         params: {
