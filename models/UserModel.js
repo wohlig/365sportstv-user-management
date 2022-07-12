@@ -208,16 +208,12 @@ export default {
         }
         var sort = {}
         sort[body.sortBy[0]] = body.sortDesc[0]
-        var startDate = new Date(body.startDate)
-        var endDate = new Date(body.endDate)
-        endDate.setDate(endDate.getDate() + 1)
         const pageNo = body.page
         const skip = (pageNo - 1) * body.itemsPerPage
         const limit = body.itemsPerPage
         const [data, count] = await Promise.all([
             User.find({
                 name: { $regex: body.searchFilter, $options: "i" },
-                updatedAt: { $gte: startDate, $lt: endDate },
                 status: { $in: ["enabled"] },
                 userType: { $in: ["User"] },
                 mobileVerified: true
@@ -227,7 +223,6 @@ export default {
                 .limit(limit),
             User.countDocuments({
                 name: { $regex: body.searchFilter, $options: "i" },
-                updatedAt: { $gte: startDate, $lt: endDate },
                 status: { $in: ["enabled"] },
                 userType: { $in: ["User"] },
                 mobileVerified: true
@@ -455,6 +450,15 @@ export default {
         const count = await User.countDocuments({
             userType: "User",
             mobileVerified: true,
+            status: { $in: ["enabled"] }
+        }).exec()
+        return count
+    },
+    getTotalUnactiveUsersForAdmin: async () => {
+        const count = await User.countDocuments({
+            userType: "User",
+            mobileVerified: true,
+            planDetails: undefined,
             status: { $in: ["enabled"] }
         }).exec()
         return count

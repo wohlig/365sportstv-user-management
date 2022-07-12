@@ -403,6 +403,19 @@ router.post("/getTotalUsersForAdmin", authenticateAdmin, async (req, res) => {
     }
 })
 router.post(
+    "/getTotalUnactiveUsersForAdmin",
+    authenticateAdmin,
+    async (req, res) => {
+        try {
+            const data = await UserModel.getTotalUnactiveUsersForAdmin()
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+router.post(
     "/getTotalBlockedUsersForAdmin",
     authenticateAdmin,
     async (req, res) => {
