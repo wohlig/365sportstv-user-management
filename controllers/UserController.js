@@ -393,6 +393,19 @@ router.post(
         }
     }
 )
+router.post(
+    "/searchUnactiveUsersForAdmin",
+    authenticateAdmin,
+    async (req, res) => {
+        try {
+            const data = await UserModel.searchUnactiveUsersForAdmin(req.body)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
 router.post("/getTotalUsersForAdmin", authenticateAdmin, async (req, res) => {
     try {
         const data = await UserModel.getTotalUsersForAdmin()
