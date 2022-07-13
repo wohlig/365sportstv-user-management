@@ -214,7 +214,7 @@ export default {
         const [data, count] = await Promise.all([
             User.find({
                 name: { $regex: body.searchFilter, $options: "i" },
-                status: { $in: ["enabled"] },
+                // status: { $in: ["enabled"] },
                 userType: { $in: ["User"] },
                 mobileVerified: true
             })
@@ -223,7 +223,7 @@ export default {
                 .limit(limit),
             User.countDocuments({
                 name: { $regex: body.searchFilter, $options: "i" },
-                status: { $in: ["enabled"] },
+                // status: { $in: ["enabled"] },
                 userType: { $in: ["User"] },
                 mobileVerified: true
             }).exec()
@@ -272,6 +272,7 @@ export default {
         return { data, count, maxPage }
     },
     searchUnactiveUsersForAdmin: async (body) => {
+        console.log(body)
         let _ = require("lodash")
         if (_.isEmpty(body.sortBy)) {
             body.sortBy = ["signUpDate"]
@@ -296,7 +297,8 @@ export default {
                 userType: "User",
                 mobileVerified: true,
                 planDetails: undefined,
-                status: { $in: ["enabled"] }
+                status: { $in: ["enabled"] },
+                name: { $regex: body.searchFilter, $options: "i" }
             })
                 .sort(sort)
                 .skip(skip)
@@ -305,7 +307,8 @@ export default {
                 userType: "User",
                 mobileVerified: true,
                 planDetails: undefined,
-                status: { $in: ["enabled"] }
+                status: { $in: ["enabled"] },
+                name: { $regex: body.searchFilter, $options: "i" }
             }).exec()
         ])
         const maxPage = Math.ceil(count / limit)
@@ -489,8 +492,8 @@ export default {
     getTotalUsersForAdmin: async () => {
         const count = await User.countDocuments({
             userType: "User",
-            mobileVerified: true,
-            status: { $in: ["enabled"] }
+            mobileVerified: true
+            // status: { $in: ["enabled"] }
         }).exec()
         return count
     },
