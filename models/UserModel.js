@@ -208,17 +208,13 @@ export default {
         }
         var sort = {}
         sort[body.sortBy[0]] = body.sortDesc[0]
-        var startDate = new Date(body.startDate)
-        var endDate = new Date(body.endDate)
-        endDate.setDate(endDate.getDate() + 1)
         const pageNo = body.page
         const skip = (pageNo - 1) * body.itemsPerPage
         const limit = body.itemsPerPage
         const [data, count] = await Promise.all([
             User.find({
                 name: { $regex: body.searchFilter, $options: "i" },
-                updatedAt: { $gte: startDate, $lt: endDate },
-                status: { $in: ["enabled"] },
+                // status: { $in: ["enabled"] },
                 userType: { $in: ["User"] },
                 mobileVerified: true
             })
@@ -227,10 +223,92 @@ export default {
                 .limit(limit),
             User.countDocuments({
                 name: { $regex: body.searchFilter, $options: "i" },
-                updatedAt: { $gte: startDate, $lt: endDate },
-                status: { $in: ["enabled"] },
+                // status: { $in: ["enabled"] },
                 userType: { $in: ["User"] },
                 mobileVerified: true
+            }).exec()
+        ])
+        const maxPage = Math.ceil(count / limit)
+        return { data, count, maxPage }
+    },
+    searchBlockedUserForAdmin: async (body) => {
+        let _ = require("lodash")
+        if (_.isEmpty(body.sortBy)) {
+            body.sortBy = ["signUpDate"]
+        }
+        if (_.isEmpty(body.sortDesc)) {
+            body.sortDesc = [-1]
+        } else {
+            if (body.sortDesc[0] === false) {
+                body.sortDesc[0] = -1
+            }
+            if (body.sortDesc[0] === true) {
+                body.sortDesc[0] = 1
+            }
+        }
+        var sort = {}
+        sort[body.sortBy[0]] = body.sortDesc[0]
+        const pageNo = body.page
+        const skip = (pageNo - 1) * body.itemsPerPage
+        const limit = body.itemsPerPage
+        const [data, count] = await Promise.all([
+            User.find({
+                name: { $regex: body.searchFilter, $options: "i" },
+                status: { $in: ["archived"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            })
+                .sort(sort)
+                .skip(skip)
+                .limit(limit),
+            User.countDocuments({
+                name: { $regex: body.searchFilter, $options: "i" },
+                status: { $in: ["archived"] },
+                userType: { $in: ["User"] },
+                mobileVerified: true
+            }).exec()
+        ])
+        const maxPage = Math.ceil(count / limit)
+        return { data, count, maxPage }
+    },
+    searchUnactiveUsersForAdmin: async (body) => {
+        console.log(body)
+        let _ = require("lodash")
+        if (_.isEmpty(body.sortBy)) {
+            body.sortBy = ["signUpDate"]
+        }
+        if (_.isEmpty(body.sortDesc)) {
+            body.sortDesc = [-1]
+        } else {
+            if (body.sortDesc[0] === false) {
+                body.sortDesc[0] = -1
+            }
+            if (body.sortDesc[0] === true) {
+                body.sortDesc[0] = 1
+            }
+        }
+        var sort = {}
+        sort[body.sortBy[0]] = body.sortDesc[0]
+        const pageNo = body.page
+        const skip = (pageNo - 1) * body.itemsPerPage
+        const limit = body.itemsPerPage
+        const [data, count] = await Promise.all([
+            User.find({
+                userType: "User",
+                mobileVerified: true,
+                planDetails: undefined,
+                status: { $in: ["enabled"] },
+                name: { $regex: body.searchFilter, $options: "i" }
+            })
+                .sort(sort)
+                .skip(skip)
+                .limit(limit),
+            User.countDocuments({
+                userType: "User",
+                mobileVerified: true,
+                planDetails: undefined,
+                status: { $in: ["enabled"] },
+                name: { $regex: body.searchFilter, $options: "i" }
             }).exec()
         ])
         const maxPage = Math.ceil(count / limit)
@@ -411,11 +489,28 @@ export default {
         }
         return { data: "Otp Sent Successfully", value: true }
     },
-    getTotalUsersForAdmin: async (body) => {
+    getTotalUsersForAdmin: async () => {
+        const count = await User.countDocuments({
+            userType: "User",
+            mobileVerified: true
+            // status: { $in: ["enabled"] }
+        }).exec()
+        return count
+    },
+    getTotalUnactiveUsersForAdmin: async () => {
         const count = await User.countDocuments({
             userType: "User",
             mobileVerified: true,
+            planDetails: undefined,
             status: { $in: ["enabled"] }
+        }).exec()
+        return count
+    },
+    getTotalBlockedUsersForAdmin: async () => {
+        const count = await User.countDocuments({
+            userType: "User",
+            mobileVerified: true,
+            status: { $in: ["archived"] }
         }).exec()
         return count
     },
@@ -485,5 +580,23 @@ export default {
             }
         ).exec()
         return { data: "User Blocked Successfully", value: true }
+    },
+    async unblockUserByAdmin(id) {
+        console.log("IDDD")
+        const user = await User.findOne({
+            _id: id,
+            status: "archived",
+            mobileVerified: true
+        })
+        if (!user) {
+            return { data: "User Not Found", value: false }
+        }
+        const updateUser = await User.updateOne(
+            { _id: id },
+            {
+                status: "enabled"
+            }
+        ).exec()
+        return { data: "User Unblocked Successfully", value: true }
     }
 }

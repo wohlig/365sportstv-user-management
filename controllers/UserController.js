@@ -380,15 +380,67 @@ router.post("/searchForAdmin", authenticateAdmin, async (req, res) => {
         res.status(500).json(error)
     }
 })
+router.post(
+    "/searchBlockedUserForAdmin",
+    authenticateAdmin,
+    async (req, res) => {
+        try {
+            const data = await UserModel.searchBlockedUserForAdmin(req.body)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+router.post(
+    "/searchUnactiveUsersForAdmin",
+    authenticateAdmin,
+    async (req, res) => {
+        try {
+            const data = await UserModel.searchUnactiveUsersForAdmin(req.body)
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
 router.post("/getTotalUsersForAdmin", authenticateAdmin, async (req, res) => {
     try {
-        const data = await UserModel.getTotalUsersForAdmin(req.body)
+        const data = await UserModel.getTotalUsersForAdmin()
         res.json(data)
     } catch (error) {
         console.error(error)
         res.status(500).json(error)
     }
 })
+router.post(
+    "/getTotalUnactiveUsersForAdmin",
+    authenticateAdmin,
+    async (req, res) => {
+        try {
+            const data = await UserModel.getTotalUnactiveUsersForAdmin()
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
+router.post(
+    "/getTotalBlockedUsersForAdmin",
+    authenticateAdmin,
+    async (req, res) => {
+        try {
+            const data = await UserModel.getTotalBlockedUsersForAdmin()
+            res.json(data)
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+)
 router.put("/blockUserByAdmin/:id", authenticateAdmin, async (req, res) => {
     ValidateRequest({
         params: {
@@ -400,6 +452,23 @@ router.put("/blockUserByAdmin/:id", authenticateAdmin, async (req, res) => {
     })
     try {
         const data = await UserModel.blockUserByAdmin(req.params.id)
+        res.json(data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json(error)
+    }
+})
+router.put("/unblockUserByAdmin/:id", authenticateAdmin, async (req, res) => {
+    ValidateRequest({
+        params: {
+            type: "object",
+            properties: {
+                id: { type: "string", format: "objectId" }
+            }
+        }
+    })
+    try {
+        const data = await UserModel.unblockUserByAdmin(req.params.id)
         res.json(data)
     } catch (error) {
         console.error(error)
