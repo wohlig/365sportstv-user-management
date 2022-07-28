@@ -24,7 +24,7 @@ var schema = new Schema(
         },
         language: {
             type: String,
-            default: "English"
+            default: "en-US"
         },
         signUpDate: { type: Date }
     },
