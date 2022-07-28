@@ -362,7 +362,11 @@ router.post(
     async (req, res) => {
         try {
             const data = await UserModel.addUserByAdmin(req.body)
-            res.json(data)
+            if (data && data.value) {
+                res.status(200).json(data.data)
+            } else {
+                res.status(500).json(data.data)
+            }
         } catch (error) {
             console.error(error)
             res.status(500).json(error)
